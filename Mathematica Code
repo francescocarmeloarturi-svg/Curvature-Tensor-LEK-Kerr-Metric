@@ -1,0 +1,99 @@
+ClearAll["Global'*"];
+list[y_] := y[[1]] == y[[2]];
+rplc[y_] := y;
+\[Epsilon][r_] := \[Epsilon]Func[r];
+
+(*Componenti g_{\[Mu]\[Nu]}*)
+g11 = gtt = -\[Epsilon][r] (1 - (2 M r)/(r^2 + a^2 Cos[\[Theta]]^2));
+g22 = grr = (r^2 + a^2 Cos[\[Theta]]^2)/(r^2 + a^2);   
+g33 = g\[Theta]\[Theta] = r^2 + a^2 Cos[\[Theta]]^2;
+g44 = g\[CurlyPhi]\[CurlyPhi] = (r^2 + a^2 + (
+      2 M r a^2 Sin[\[Theta]]^2)/(
+      r^2 + a^2 Cos[\[Theta]]^2)) Sin[\[Theta]]^2;
+g14 = gt\[CurlyPhi] = -Sqrt[\[Epsilon][r]] (2 M r a Sin[\[Theta]]^2)/(
+    r^2 + a^2 Cos[\[Theta]]^2) ;
+g12 = gtr = Sqrt[\[Epsilon][r]] Sqrt[(2 M r)/(r^2 + a^2)];
+g24 = gr\[CurlyPhi] = -Sqrt[((2 M r)/(r^2 + a^2))] a Sin[\[Theta]]^2;
+g23 = g34 = g13 = 0;
+
+(*Coordinate*)
+x = {t, r, \[Theta], \[CurlyPhi]}; n = 4;
+
+(*Tensore Metrico g_{\[Mu]\[Nu]}*)
+mt = FullSimplify[{
+    {g11, g12, g13, g14},
+    {g12, g22, g23, g24},
+    {g13, g23, g33, g34},
+    {g14, g24, g34, g44}
+    }];
+Subscript["g", \[Mu]\[Sigma]] -> MatrixForm[mt]
+
+(*g^{\[Mu]\[Nu]}*)
+it = FullSimplify[Inverse[mt]];
+"g"^\[Mu]\[Sigma] -> MatrixForm[it]
+
+(*g_{\[Mu]\[Nu]}g^{\[Mu]\[Nu]}*)
+mx = FullSimplify[
+   Table[Simplify[Sum[it[[i, k]]*mt[[k, j]], {k, 1, n}]], {i, 1, 
+     n}, {j, 1, n}]];
+Subsuperscript["g", "\[Mu]", "\[Sigma]"] -> MatrixForm[mx]
+
+(*det[g_{\[Mu]\[Nu]}]*)
+md = FullSimplify[Det[mt]];
+"det[\!\(\*SubscriptBox[\(g\), \
+\(\[LeftDoubleBracket]\(\[Mu]\[Sigma]\)\(\[RightDoubleBracket]\)\)]\)]" \
+-> md
+
+(*Simboli di Christoffel \[CapitalGamma]^{\[Gamma]}_{\[Mu]\[Nu]}*)
+chr = ParallelTable[
+   FullSimplify[(1/
+       2) Sum[(it[[i, s]]) (D[mt[[s, j]], x[[k]]] + 
+         D[mt[[s, k]], x[[j]]] - D[mt[[j, k]], x[[s]]]), {s, 1, 
+       n}]], {i, 1, n}, {j, 1, n}, {k, 1, n}];
+crs = ParallelTable[
+   If[UnsameQ[chr[[i, j, k]], 
+     0], {Subsuperscript["\[CapitalGamma]", ToString[j] <> ToString[k],
+        i] -> chr[[i, j, k]]}], {i, 1, n}, {j, 1, n}, {k, 1, j}];
+TableForm[DeleteCases[Flatten[crs], Null]]
+
+(*Tensore di Riemann R^{\[Delta]}_{\[Mu]\[Nu]\[Gamma]}*)
+rmn = ParallelTable[
+   FullSimplify[
+    D[chr[[i, j, l]], x[[k]]] - D[chr[[i, j, k]], x[[l]]] + 
+     Sum[chr[[s, j, l]]*chr[[i, k, s]] - 
+       chr[[s, j, k]]*chr[[i, l, s]], {s, 1, n}]], {i, 1, n}, {j, 1, 
+    n}, {k, 1, n}, {l, 1, n}];
+rie = ParallelTable[
+   If[UnsameQ[rmn[[i, j, k, l]], 
+     0], {Subsuperscript["R", 
+       ToString[j] <> ToString[k] <> ToString[l], i] -> 
+      rmn[[i, j, k, l]]}], {i, 1, n}, {j, 1, n}, {k, 1, n}, {l, 1, 
+    k - 1}];
+TableForm[DeleteCases[Flatten[rie], Null]]
+
+(*Tensore di Ricci R_{\[Mu]\[Nu]}*)
+rcc = ParallelTable[
+   FullSimplify[Sum[rmn[[i, j, i, l]], {i, 1, n}]], {j, 1, n}, {l, 1, 
+    n}];
+Subscript["R", \[Mu]\[Sigma]] -> MatrixForm[rcc]
+
+(*Scalare di Ricci R*)
+R = FullSimplify[Sum[it[[i, j]] rcc[[i, j]], {i, 1, n}, {j, 1, n}]];
+"Ř" -> R
+
+(*R_{ijkl}*)
+rcv = ParallelTable[
+   FullSimplify[Sum[mt[[i, j]]*rmn[[j, k, l, m]], {j, 1, n}]], {i, 1, 
+    n}, {k, 1, n}, {l, 1, n}, {m, 1, n}];
+
+(*R^{ijkl}*)
+rcn = ParallelTable[
+   FullSimplify[
+    Sum[it[[m, i]]*it[[h, j]]*it[[o, k]]*it[[p, l]]*
+      rcv[[i, j, k, l]], {i, 1, n}, {j, 1, n}, {k, 1, n}, {l, 1, 
+      n}]], {m, 1, n}, {h, 1, n}, {o, 1, n}, {p, 1, n}];
+
+(*Scalare di Kretschmann K*)
+krn = FullSimplify[
+   Sum[rcv[[i, j, k, l]]*rcn[[i, j, k, l]], {i, 1, n}, {j, 1, n}, {k, 
+     1, n}, {l, 1, n}]];
