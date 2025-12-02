@@ -1,0 +1,3 @@
+Tensor analysis for the Lorentzian–Quasi-Euclidean Kerr metric in Doran coordinates
+This repository contains the full Mathematica implementation used to compute the geometric and curvature quantities associated with the Lorentzian–Quasi-Euclidean (LQE) Kerr metric in Doran coordinates, as introduced in the accompanying research article: "Atemporality in Kerr Spacetime: The Lorentzian-Quasi-Euclidean Kerr Model" (link).
+The notebook LQE_Kerr_Doran_TensorAnalysis.nb performs a complete symbolic computation of the metric tensor, Christoffel symbols, Riemann tensor, Ricci tensor, Ricci scalar, and the Kretschmann invariant for the modified Kerr geometry featuring a signature–changing function.
